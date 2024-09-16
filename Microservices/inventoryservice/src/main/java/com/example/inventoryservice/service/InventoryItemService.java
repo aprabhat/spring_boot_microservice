@@ -2,6 +2,7 @@ package com.example.inventoryservice.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class InventoryItemService {
 
 	@Autowired
 	private InventoryRepository inventoryRepository;
+	
 
 	public List<InventoryItemDto> getAllItems() {
 		List<InventoryItem> findAll = inventoryRepository.findAll();
@@ -45,7 +47,18 @@ public class InventoryItemService {
 	}
 
 	private InventoryItem buildInventoryItem(InventoryItemDto inventoryItemDto) {
-		return new InventoryItem(inventoryItemDto.getName(), inventoryItemDto.getQuantity(), inventoryItemDto.getPrice());
+		return new InventoryItem(inventoryItemDto.getName(), inventoryItemDto.getQuantity(),
+				inventoryItemDto.getPrice());
+	}
+
+	public InventoryItemDto getItemById(Long id) throws Exception {
+		Optional<InventoryItem> findById = inventoryRepository.findById(id);
+		if (findById.isPresent()) {
+			InventoryItemDto dto = buildInventoryItemDto(findById.get());
+			return dto;
+		} else {
+			throw new Exception("item not found");
+		}
 	}
 
 }
