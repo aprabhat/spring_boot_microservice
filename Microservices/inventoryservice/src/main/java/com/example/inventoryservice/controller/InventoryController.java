@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.inventoryservice.dto.InventoryItemDto;
-import com.example.inventoryservice.entity.InventoryItem;
 import com.example.inventoryservice.service.InventoryItemService;
 
 @RestController
