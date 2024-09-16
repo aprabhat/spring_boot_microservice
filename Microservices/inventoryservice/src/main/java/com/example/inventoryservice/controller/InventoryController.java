@@ -33,7 +33,7 @@ public class InventoryController {
 
     // Check if an item is available
     @GetMapping("/items/{itemId}/available")
-    public ResponseEntity<Boolean> isItemAvailable(@PathVariable Long itemId, @RequestParam int quantity) {
+    public ResponseEntity<Boolean> isItemAvailable(@PathVariable("itemId") Long itemId, @RequestParam("quantity") int quantity) {
         boolean isAvailable = inventoryService.isItemAvailable(itemId, quantity);
         return ResponseEntity.ok(isAvailable);
     }
