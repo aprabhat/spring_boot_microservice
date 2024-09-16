@@ -1,46 +1,73 @@
 package com.example.inventoryservice.controller;
 
-import java.util.List;
-
+import com.example.inventoryservice.entity.InventoryItem;
+import com.example.inventoryservice.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import com.example.inventoryservice.dto.InventoryItemDto;
-import com.example.inventoryservice.exception.ItemNotFoundException;
-import com.example.inventoryservice.service.InventoryItemService;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
+@RequestMapping("/api/inventory")
 public class InventoryController {
 
-	// CRUD --
+    @Autowired
+    private InventoryService inventoryService;
 
-	@Autowired
-	private InventoryItemService inventoryItemService;
+    // Get all inventory items
+    @GetMapping("/items")
+    public ResponseEntity<List<InventoryItem>> getAllItems() {
+        List<InventoryItem> items = inventoryService.getAllItems();
+        return ResponseEntity.ok(items);
+    }
 
-	@GetMapping("/items")
-	public List<InventoryItemDto> getAllItems() {
-		return inventoryItemService.getAllItems();
+    // Get a specific inventory item by ID
+    @GetMapping("/items/{itemId}")
+    public ResponseEntity<InventoryItem> getItemById(@PathVariable Long itemId) {
+        Optional<InventoryItem> item = inventoryService.getItemById(itemId);
+        return item.map(ResponseEntity::ok)
+                   .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
-	}
+    // Check if an item is available
+    @GetMapping("/items/{itemId}/available")
+    public ResponseEntity<Boolean> isItemAvailable(@PathVariable Long itemId, @RequestParam int quantity) {
+        boolean isAvailable = inventoryService.isItemAvailable(itemId, quantity);
+        return ResponseEntity.ok(isAvailable);
+    }
 
-	@PostMapping("/items")
-	public void storeItem(@RequestBody InventoryItemDto inventoryItemDto) {
-		inventoryItemService.storeInventoryItem(inventoryItemDto);
-	}
+    // Reserve an item
+    @PutMapping("/items/{itemId}/reserve")
+    public ResponseEntity<Void> reserveItem(@PathVariable Long itemId, @RequestParam int quantity) {
+        try {
+            inventoryService.reserveItem(itemId, quantity);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
-	@GetMapping("/items/{id}")
-	public InventoryItemDto getItemById(@PathVariable("id") Long id) {
-		try {
-			return inventoryItemService.getItemById(id);
-		} catch (Exception e) {
-			
-			return null;
-		}
+    // Deduct an item after order completion
+    @PutMapping("/items/{itemId}/deduct")
+    public ResponseEntity<Void> deductItem(@PathVariable Long itemId, @RequestParam int quantity) {
+        try {
+            inventoryService.deductItem(itemId, quantity);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
-	}
-
+    // Release a reserved item (cancel reservation)
+    @PutMapping("/items/{itemId}/release")
+    public ResponseEntity<Void> releaseItem(@PathVariable Long itemId, @RequestParam int quantity) {
+        try {
+            inventoryService.releaseItem(itemId, quantity);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
