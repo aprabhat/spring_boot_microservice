@@ -40,3 +40,9 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+jar {
+    archiveBaseName.set('inventory-service')  // Custom base name
+    archiveVersion.set('')                      // Custom version (optional)
+    archiveClassifier.set('')                        // Classifier, empty to avoid '-plain' or other suffixes
+}
