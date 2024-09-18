@@ -8,7 +8,10 @@ import org.springframework.web.client.RestTemplate;
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class OrderService {
 
 	@Autowired
@@ -21,6 +24,7 @@ public class OrderService {
 	private String inventoryServiceUrl;
 
 	public Order placeOrder(Order order) {
+		log.info("inventoryServiceUrl {}", inventoryServiceUrl);
 		// Check inventory for each item
 		for (int i = 0; i < order.getItemIds().size(); i++) {
 			Long itemId = order.getItemIds().get(i);
