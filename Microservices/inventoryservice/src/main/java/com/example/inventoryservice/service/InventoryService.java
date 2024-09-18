@@ -69,4 +69,12 @@ public class InventoryService {
             throw new RuntimeException("Item not found: " + itemId);
         }
     }
+
+	public void store(InventoryItem inventoryItem) {
+		inventoryRepository.save(inventoryItem);
+	}
+
+	public void storeAll(List<InventoryItem> inventoryItems) {
+		inventoryRepository.saveAll(inventoryItems);
+	}
 }

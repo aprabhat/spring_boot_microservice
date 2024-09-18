@@ -22,6 +22,16 @@ public class InventoryController {
         List<InventoryItem> items = inventoryService.getAllItems();
         return ResponseEntity.ok(items);
     }
+    
+    @PostMapping("/items")
+    public void storeItems(@RequestBody InventoryItem inventoryItem) {
+        inventoryService.store(inventoryItem);
+    }
+    
+    @PostMapping("/all/items")
+    public void storeAllItems(@RequestBody List<InventoryItem> inventoryItems) {
+        inventoryService.storeAll(inventoryItems);
+    }
 
     // Get a specific inventory item by ID
     @GetMapping("/items/{itemId}")
@@ -40,7 +50,7 @@ public class InventoryController {
 
     // Reserve an item
     @PutMapping("/items/{itemId}/reserve")
-    public ResponseEntity<Void> reserveItem(@PathVariable Long itemId, @RequestParam int quantity) {
+    public ResponseEntity<Void> reserveItem(@PathVariable("itemId") Long itemId, @RequestParam("quantity") int quantity) {
         try {
             inventoryService.reserveItem(itemId, quantity);
             return ResponseEntity.noContent().build();

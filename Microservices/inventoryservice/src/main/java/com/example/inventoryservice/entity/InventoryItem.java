@@ -16,8 +16,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InventoryItem {
 	
-	
-
 	public InventoryItem(String name, Integer quantity, Double price) {
 		super();
 		this.name = name;
