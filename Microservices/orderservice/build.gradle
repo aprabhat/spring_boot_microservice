@@ -41,7 +41,7 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-jar {
+bootJar {
     archiveBaseName.set('order-service')  // Custom base name
     archiveVersion.set('')                      // Custom version (optional)
     archiveClassifier.set('')                        // Classifier, empty to avoid '-plain' or other suffixes

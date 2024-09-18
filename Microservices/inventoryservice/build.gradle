@@ -31,6 +31,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
+	implementation 'com.mysql:mysql-connector-j:8.0.33'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	//testImplementation 'org.springframework.security:spring-security-test'
@@ -41,7 +42,7 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-jar {
+bootJar {
     archiveBaseName.set('inventory-service')  // Custom base name
     archiveVersion.set('')                      // Custom version (optional)
     archiveClassifier.set('')                        // Classifier, empty to avoid '-plain' or other suffixes
