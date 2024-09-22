@@ -1,5 +1,7 @@
 package com.example.inventoryservice.entity;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "inventory_items")
 @NoArgsConstructor
+@JacksonXmlRootElement(localName = "inventory")
 public class InventoryItem {
 	
 	public InventoryItem(String name, Integer quantity, Double price) {

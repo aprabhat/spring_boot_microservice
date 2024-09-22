@@ -13,71 +13,72 @@ import java.util.Optional;
 @RequestMapping("/api/inventory")
 public class InventoryController {
 
-    @Autowired
-    private InventoryService inventoryService;
+	@Autowired
+	private InventoryService inventoryService;
 
-    // Get all inventory items
-    @GetMapping("/items")
-    public ResponseEntity<List<InventoryItem>> getAllItems() {
-        List<InventoryItem> items = inventoryService.getAllItems();
-        return ResponseEntity.ok(items);
-    }
-    
-    @PostMapping("/items")
-    public void storeItems(@RequestBody InventoryItem inventoryItem) {
-        inventoryService.store(inventoryItem);
-    }
-    
-    @PostMapping("/all/items")
-    public void storeAllItems(@RequestBody List<InventoryItem> inventoryItems) {
-        inventoryService.storeAll(inventoryItems);
-    }
+	// Get all inventory items
+	@GetMapping(value = "/items", produces = { "application/json", "application/xml" })
+	public ResponseEntity<List<InventoryItem>> getAllItems() {
+		List<InventoryItem> items = inventoryService.getAllItems();
+		return ResponseEntity.ok(items);
+	}
 
-    // Get a specific inventory item by ID
-    @GetMapping("/items/{itemId}")
-    public ResponseEntity<InventoryItem> getItemById(@PathVariable Long itemId) {
-        Optional<InventoryItem> item = inventoryService.getItemById(itemId);
-        return item.map(ResponseEntity::ok)
-                   .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+	@PostMapping("/items")
+	public void storeItems(@RequestBody InventoryItem inventoryItem) {
+		inventoryService.store(inventoryItem);
+	}
 
-    // Check if an item is available
-    @GetMapping("/items/{itemId}/available")
-    public ResponseEntity<Boolean> isItemAvailable(@PathVariable("itemId") Long itemId, @RequestParam("quantity") int quantity) {
-        boolean isAvailable = inventoryService.isItemAvailable(itemId, quantity);
-        return ResponseEntity.ok(isAvailable);
-    }
+	@PostMapping("/all/items")
+	public void storeAllItems(@RequestBody List<InventoryItem> inventoryItems) {
+		inventoryService.storeAll(inventoryItems);
+	}
 
-    // Reserve an item
-    @PutMapping("/items/{itemId}/reserve")
-    public ResponseEntity<Void> reserveItem(@PathVariable("itemId") Long itemId, @RequestParam("quantity") int quantity) {
-        try {
-            inventoryService.reserveItem(itemId, quantity);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+	// Get a specific inventory item by ID
+	@GetMapping("/items/{itemId}")
+	public ResponseEntity<InventoryItem> getItemById(@PathVariable Long itemId) {
+		Optional<InventoryItem> item = inventoryService.getItemById(itemId);
+		return item.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+	}
 
-    // Deduct an item after order completion
-    @PutMapping("/items/{itemId}/deduct")
-    public ResponseEntity<Void> deductItem(@PathVariable Long itemId, @RequestParam int quantity) {
-        try {
-            inventoryService.deductItem(itemId, quantity);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+	// Check if an item is available
+	@GetMapping("/items/{itemId}/available")
+	public ResponseEntity<Boolean> isItemAvailable(@PathVariable("itemId") Long itemId,
+			@RequestParam("quantity") int quantity) {
+		boolean isAvailable = inventoryService.isItemAvailable(itemId, quantity);
+		return ResponseEntity.ok(isAvailable);
+	}
 
-    // Release a reserved item (cancel reservation)
-    @PutMapping("/items/{itemId}/release")
-    public ResponseEntity<Void> releaseItem(@PathVariable Long itemId, @RequestParam int quantity) {
-        try {
-            inventoryService.releaseItem(itemId, quantity);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+	// Reserve an item
+	@PutMapping("/items/{itemId}/reserve")
+	public ResponseEntity<Void> reserveItem(@PathVariable("itemId") Long itemId,
+			@RequestParam("quantity") int quantity) {
+		try {
+			inventoryService.reserveItem(itemId, quantity);
+			return ResponseEntity.noContent().build();
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().build();
+		}
+	}
+
+	// Deduct an item after order completion
+	@PutMapping("/items/{itemId}/deduct")
+	public ResponseEntity<Void> deductItem(@PathVariable Long itemId, @RequestParam int quantity) {
+		try {
+			inventoryService.deductItem(itemId, quantity);
+			return ResponseEntity.noContent().build();
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().build();
+		}
+	}
+
+	// Release a reserved item (cancel reservation)
+	@PutMapping("/items/{itemId}/release")
+	public ResponseEntity<Void> releaseItem(@PathVariable Long itemId, @RequestParam int quantity) {
+		try {
+			inventoryService.releaseItem(itemId, quantity);
+			return ResponseEntity.noContent().build();
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().build();
+		}
+	}
 }
