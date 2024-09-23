@@ -35,7 +35,7 @@ public class InventoryController {
 
 	// Get a specific inventory item by ID
 	@GetMapping("/items/{itemId}")
-	public ResponseEntity<InventoryItem> getItemById(@PathVariable Long itemId) {
+	public ResponseEntity<InventoryItem> getItemById(@PathVariable("itemId") Long itemId) {
 		Optional<InventoryItem> item = inventoryService.getItemById(itemId);
 		return item.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
 	}
