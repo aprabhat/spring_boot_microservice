@@ -14,6 +14,18 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - ecommerce-network
+      
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # RabbitMQ default port for messaging
+      - "15672:15672"  # RabbitMQ Management Plugin (web UI) default port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest  # default username
+      RABBITMQ_DEFAULT_PASS: guest  # default password
+    networks:
+      - ecommerce-network
 
   inventory-service:
     image: inventory-service:latest
