@@ -20,6 +20,7 @@ public class MessageConsumer {
     @RabbitListener(queues = ORDER_STATUS_QUEUE_NAME)
     public void receiveMessage(String message) {
         log.info("Received message: {}", message);
+        // processing the message
         smsService.sendNotification(message);
     }
 }
