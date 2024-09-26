@@ -1,5 +1,6 @@
 package com.example.orderservice.service;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
 
+import ch.qos.logback.classic.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -16,6 +18,9 @@ public class OrderService {
 
 	@Autowired
 	private OrderRepository orderRepository;
+	
+	@Autowired
+	private MessageProducer messageProducer;
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -34,6 +39,7 @@ public class OrderService {
 					inventoryServiceUrl + "/" + itemId + "/available?quantity=" + quantity, Boolean.class);
 
 			if (isAvailable == null || !isAvailable) {
+				log.error("item not available");
 				throw new RuntimeException("Item ID " + itemId + " is not available in the required quantity.");
 			}
 
@@ -43,7 +49,10 @@ public class OrderService {
 
 		// Save order with status 'PENDING'
 		order.setOrderStatus("PENDING");
-		return orderRepository.save(order);
+		messageProducer.sendMessage("order placed successfully for "+ order);
+		Order orderEntity = orderRepository.save(order);
+		log.info("data saved successfully {}", orderEntity);
+		return orderEntity;
 	}
 
 	public void completeOrder(Long orderId) {
