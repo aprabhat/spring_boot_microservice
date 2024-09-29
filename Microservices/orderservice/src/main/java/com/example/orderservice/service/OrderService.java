@@ -1,15 +1,15 @@
 package com.example.orderservice.service;
 
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
 
-import ch.qos.logback.classic.Logger;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -24,19 +24,23 @@ public class OrderService {
 
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	@Autowired
+	DiscoveryClient discoveryClient;
 
 	@Value("${INVENTORY_SERVICE_URL}")
 	private String inventoryServiceUrl;
 
 	public Order placeOrder(Order order) {
-		log.info("inventoryServiceUrl {}", inventoryServiceUrl);
+		log.info("inventoryServiceUrl from properties file {}", inventoryServiceUrl);
+		log.info("inventoryServiceUrl from eureka client {}", discoveryClient.getInstances("inventoryservice").get(0).getUri());
 		// Check inventory for each item
 		for (int i = 0; i < order.getItemIds().size(); i++) {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
 
 			Boolean isAvailable = restTemplate.getForObject(
-					inventoryServiceUrl + "/" + itemId + "/available?quantity=" + quantity, Boolean.class);
+					discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/api/inventory/items/" + itemId + "/available?quantity=" + quantity, Boolean.class);
 
 			if (isAvailable == null || !isAvailable) {
 				log.error("item not available");
@@ -44,7 +48,7 @@ public class OrderService {
 			}
 
 			// Reserve the inventory
-			restTemplate.put(inventoryServiceUrl + "/" + itemId + "/reserve?quantity=" + quantity, null);
+			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/api/inventory/items/" + itemId + "/reserve?quantity=" + quantity, null);
 		}
 
 		// Save order with status 'PENDING'
