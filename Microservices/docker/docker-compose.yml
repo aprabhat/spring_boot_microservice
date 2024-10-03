@@ -28,8 +28,7 @@ services:
       - ecommerce-network
 
   inventory-service:
-    image: inventory-service:latest
-    container_name: inventory-service-container
+    image: inventory-service:latests
     depends_on:
       - mysql
     environment:
