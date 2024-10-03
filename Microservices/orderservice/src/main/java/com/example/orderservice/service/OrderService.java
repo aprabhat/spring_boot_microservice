@@ -28,19 +28,14 @@ public class OrderService {
 	@Autowired
 	DiscoveryClient discoveryClient;
 
-	@Value("${INVENTORY_SERVICE_URL}")
-	private String inventoryServiceUrl;
-
 	public Order placeOrder(Order order) {
-		log.info("inventoryServiceUrl from properties file {}", inventoryServiceUrl);
 		log.info("inventoryServiceUrl from eureka client {}", discoveryClient.getInstances("inventoryservice").get(0).getUri());
 		// Check inventory for each item
 		for (int i = 0; i < order.getItemIds().size(); i++) {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
 
-			Boolean isAvailable = restTemplate.getForObject(
-					discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/api/inventory/items/" + itemId + "/available?quantity=" + quantity, Boolean.class);
+			Boolean isAvailable = restTemplate.getForObject("http://inventoryservice/api/inventory/items/" + itemId + "/available?quantity=" + quantity, Boolean.class);
 
 			if (isAvailable == null || !isAvailable) {
 				log.error("item not available");
@@ -48,12 +43,12 @@ public class OrderService {
 			}
 
 			// Reserve the inventory
-			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/api/inventory/items/" + itemId + "/reserve?quantity=" + quantity, null);
+			restTemplate.put("http://inventoryservice/api/inventory/items/" + itemId + "/reserve?quantity=" + quantity, null);
 		}
 
 		// Save order with status 'PENDING'
 		order.setOrderStatus("PENDING");
-		messageProducer.sendMessage("order placed successfully for "+ order);
+//		messageProducer.sendMessage("order placed successfully for "+ order);
 		Order orderEntity = orderRepository.save(order);
 		log.info("data saved successfully {}", orderEntity);
 		return orderEntity;
@@ -67,7 +62,7 @@ public class OrderService {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
 
-			restTemplate.put(inventoryServiceUrl + "/" + itemId + "/deduct?quantity=" + quantity, null);
+			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/" + itemId + "/deduct?quantity=" + quantity, null);
 		}
 
 		// Update order status to 'COMPLETED'
@@ -83,7 +78,7 @@ public class OrderService {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
 
-			restTemplate.put(inventoryServiceUrl + "/" + itemId + "/release?quantity=" + quantity, null);
+			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/" + itemId + "/release?quantity=" + quantity, null);
 		}
 
 		// Update order status to 'CANCELLED'
