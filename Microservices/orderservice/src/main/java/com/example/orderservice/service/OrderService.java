@@ -1,14 +1,13 @@
 package com.example.orderservice.service;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
-
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,24 +17,26 @@ public class OrderService {
 
 	@Autowired
 	private OrderRepository orderRepository;
-	
+
 	@Autowired
 	private MessageProducer messageProducer;
 
 	@Autowired
 	private RestTemplate restTemplate;
-	
+
 	@Autowired
 	DiscoveryClient discoveryClient;
 
+	//@CircuitBreaker(name = "inventoryservice", fallbackMethod = "defaultMethod")
 	public Order placeOrder(Order order) {
-		log.info("inventoryServiceUrl from eureka client {}", discoveryClient.getInstances("inventoryservice").get(0).getUri());
 		// Check inventory for each item
 		for (int i = 0; i < order.getItemIds().size(); i++) {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
 
-			Boolean isAvailable = restTemplate.getForObject("http://inventoryservice/api/inventory/items/" + itemId + "/available?quantity=" + quantity, Boolean.class);
+			Boolean isAvailable = restTemplate.getForObject(
+					"http://localhost:9094/api/inventory/items/" + itemId + "/available?quantity=" + quantity,
+					Boolean.class);
 
 			if (isAvailable == null || !isAvailable) {
 				log.error("item not available");
@@ -43,7 +44,8 @@ public class OrderService {
 			}
 
 			// Reserve the inventory
-			restTemplate.put("http://inventoryservice/api/inventory/items/" + itemId + "/reserve?quantity=" + quantity, null);
+			restTemplate.put("http://localhost:9094/api/inventory/items/" + itemId + "/reserve?quantity=" + quantity,
+					null);
 		}
 
 		// Save order with status 'PENDING'
@@ -62,7 +64,8 @@ public class OrderService {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
 
-			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/" + itemId + "/deduct?quantity=" + quantity, null);
+			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/" + itemId
+					+ "/deduct?quantity=" + quantity, null);
 		}
 
 		// Update order status to 'COMPLETED'
@@ -78,11 +81,19 @@ public class OrderService {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
 
-			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/" + itemId + "/release?quantity=" + quantity, null);
+			restTemplate.put(discoveryClient.getInstances("inventoryservice").get(0).getUri() + "/" + itemId
+					+ "/release?quantity=" + quantity, null);
 		}
 
 		// Update order status to 'CANCELLED'
 		order.setOrderStatus("CANCELLED");
 		orderRepository.save(order);
+	}
+
+	public Order defaultMethod(Exception e) {
+		log.info("called from circuit breaker {}", ExceptionUtils.getStackTrace(e));
+		//send the order details to inventory service using queue
+		return new Order();
+		// logic as per your business needs
 	}
 }

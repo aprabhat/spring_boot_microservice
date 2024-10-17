@@ -2,6 +2,9 @@ package com.example.inventoryservice.service;
 
 import com.example.inventoryservice.entity.InventoryItem;
 import com.example.inventoryservice.repository.InventoryRepository;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class InventoryService {
 
     @Autowired
@@ -16,6 +20,7 @@ public class InventoryService {
 
     // Get all inventory items
     public List<InventoryItem> getAllItems() {
+    	log.info("get all inventory items request received");
         return inventoryRepository.findAll();
     }
 
@@ -26,12 +31,14 @@ public class InventoryService {
 
     // Check if an item is available in the required quantity
     public boolean isItemAvailable(Long itemId, int requiredQuantity) {
+    	log.info("request received for checking inventory item with id {}", itemId);
         Optional<InventoryItem> item = inventoryRepository.findById(itemId);
         return item.map(inventoryItem -> inventoryItem.getQuantity() >= requiredQuantity).orElse(false);
     }
 
     // Reserve an item by reducing the available quantity
     public void reserveItem(Long itemId, int quantity) {
+    	log.info("request received for reserving inventory item with id {}", itemId);
         Optional<InventoryItem> item = inventoryRepository.findById(itemId);
         if (item.isPresent()) {
             InventoryItem inventoryItem = item.get();
