@@ -1,5 +1,9 @@
 package com.example.orderservice.service;
 
+import java.net.http.HttpRequest;
+
+import javax.swing.text.StyledEditorKit.BoldAction;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -8,6 +12,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
+import com.example.orderservice.service.feignclient.IntentoryClient;
+import com.netflix.discovery.converters.Auto;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +29,9 @@ public class OrderService {
 
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	@Autowired
+	private IntentoryClient inventoryClient;
 
 	@Autowired
 	DiscoveryClient discoveryClient;
@@ -33,19 +42,19 @@ public class OrderService {
 		for (int i = 0; i < order.getItemIds().size(); i++) {
 			Long itemId = order.getItemIds().get(i);
 			int quantity = order.getItemQuantities().get(i);
+			
+			Boolean isAvailable = inventoryClient.checkInventory(itemId, quantity);
 
-			Boolean isAvailable = restTemplate.getForObject(
-					"http://localhost:9094/api/inventory/items/" + itemId + "/available?quantity=" + quantity,
-					Boolean.class);
 
 			if (isAvailable == null || !isAvailable) {
 				log.error("item not available");
 				throw new RuntimeException("Item ID " + itemId + " is not available in the required quantity.");
 			}
 
-			// Reserve the inventory
-			restTemplate.put("http://localhost:9094/api/inventory/items/" + itemId + "/reserve?quantity=" + quantity,
-					null);
+			inventoryClient.reserveQuantity(itemId, quantity);
+//			// Reserve the inventory
+//			restTemplate.put("http://localhost:9094/api/inventory/items/" + itemId + "/reserve?quantity=" + quantity,
+//					null);
 		}
 
 		// Save order with status 'PENDING'
